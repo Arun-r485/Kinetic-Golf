@@ -33,7 +33,15 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     const result = await res.json();
     localStorage.setItem("token", result.token);
     return result;
@@ -44,14 +52,30 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   getProfile: async () => {
     const res = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
@@ -62,7 +86,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify({ amount, plan }),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   verifyPayment: async (data: any) => {
@@ -71,7 +103,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
@@ -82,7 +122,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   updateScore: async (id: string, data: { date: string; course: string; score: number; holes?: number; holeScores?: number[]; holePars?: number[] }) => {
@@ -91,7 +139,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   deleteScore: async (id: string) => {
@@ -99,33 +155,73 @@ export const api = {
       method: "DELETE",
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   getScores: async () => {
     const res = await fetch(`${API_BASE_URL}/scores`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
   // Draws
   getCurrentDraw: async () => {
     const res = await fetch(`${API_BASE_URL}/draws/current`);
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   getDrawHistory: async () => {
     const res = await fetch(`${API_BASE_URL}/draws/history`);
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
   // Charities
   getCharities: async () => {
     const res = await fetch(`${API_BASE_URL}/charities`);
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   selectCharity: async (data: { charityId: string }) => {
@@ -134,7 +230,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
@@ -145,21 +249,45 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   getWinnerStatus: async () => {
     const res = await fetch(`${API_BASE_URL}/winners/status`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   getWalletBalance: async () => {
     const res = await fetch(`${API_BASE_URL}/wallet/balance`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
@@ -168,7 +296,15 @@ export const api = {
     const res = await fetch(`${API_BASE_URL}/subscription/billing-history`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   cancelSubscription: async () => {
@@ -176,7 +312,15 @@ export const api = {
       method: "POST",
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   updatePaymentMethod: async (data: any) => {
@@ -185,7 +329,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
@@ -194,28 +346,60 @@ export const api = {
     const res = await fetch(`${API_BASE_URL}/admin/stats`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   getAdminUsers: async () => {
     const res = await fetch(`${API_BASE_URL}/admin/users`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   getWinners: async () => {
     const res = await fetch(`${API_BASE_URL}/admin/winners`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   getAdminChartData: async () => {
     const res = await fetch(`${API_BASE_URL}/admin/chart-data`, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   sendDrawReminders: async () => {
@@ -223,7 +407,15 @@ export const api = {
       method: "POST",
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   runDraw: async (data: any) => {
@@ -232,7 +424,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   simulateDraw: async () => {
@@ -240,7 +440,15 @@ export const api = {
       method: "POST",
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   publishDraw: async (id: string) => {
@@ -248,7 +456,15 @@ export const api = {
       method: "POST",
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   updateWinnerStatus: async (id: string, status: string) => {
@@ -257,14 +473,30 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify({ status }),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
   // Settings
   getSettings: async () => {
     const res = await fetch(`${API_BASE_URL}/settings`);
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   updateSettings: async (data: any) => {
@@ -273,7 +505,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
 
@@ -284,7 +524,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   updateCharity: async (id: string, data: any) => {
@@ -293,7 +541,15 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(text);
+      }
+    }
     return res.json();
   },
   deleteCharity: async (id: string) => {
