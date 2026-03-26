@@ -501,6 +501,41 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
     const { email, password } = LoginSchema.parse(req.body);
     const normalizedEmail = email.trim().toLowerCase();
 
+    // Mock Admin Login Bypass
+    if (normalizedEmail === "admin@demo.com" && password === "admin@123") {
+      console.log("Mock Admin Login successful");
+      const mockUser = {
+        id: "mock-admin-id",
+        name: "Mock Admin",
+        email: "admin@demo.com",
+        role: "admin",
+        subscription_status: "active",
+        subscription_plan: "yearly",
+        region: "US",
+        currency: "USD",
+        currency_symbol: "$"
+      };
+
+      const token = jwt.sign(
+        { id: mockUser.id, role: mockUser.role },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return res.status(200).json({
+        success: true,
+        token,
+        user: {
+          id: mockUser.id,
+          name: mockUser.name,
+          email: mockUser.email,
+          role: mockUser.role,
+          subscriptionStatus: mockUser.subscription_status,
+          subscriptionPlan: mockUser.subscription_plan
+        }
+      });
+    }
+
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       return res.status(500).json({ success: false, message: "Backend configuration error: Supabase credentials missing" });
     }
