@@ -1,4 +1,0 @@
-server.ts(479,11): error TS2554: Expected 1 arguments, but got 4.
-server.ts(686,9): error TS2554: Expected 1 arguments, but got 4.
-server.ts(963,7): error TS2554: Expected 1 arguments, but got 4.
-server.ts(987,7): error TS2554: Expected 1 arguments, but got 4.
