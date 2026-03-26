@@ -67,26 +67,21 @@ const toSnake = (obj: any): any => {
   return obj
 }
 
+// Only variables that are truly required for the API to run.
+// Feature-specific env vars (SMTP/Razorpay/prices) should be validated inside those routes.
 const REQUIRED_ENV_VARS = [
   'SUPABASE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
   'JWT_SECRET',
-  'RAZORPAY_KEY_ID',
-  'RAZORPAY_KEY_SECRET',
-  'SMTP_HOST',
-  'SMTP_PORT',
-  'SMTP_USER',
-  'SMTP_PASS',
-  'EMAIL_FROM',
-  'FRONTEND_URL',
-  'SUBSCRIPTION_MONTHLY_PRICE',
-  'SUBSCRIPTION_YEARLY_PRICE'
-]
+] as const;
 
-const missingVars = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
-if (missingVars.length > 0) {
-  console.error("Missing required environment variables:", missingVars);
-  // Don't exit on Vercel/serverless — it breaks deployments.
+const getMissingRequiredEnvVars = () =>
+  REQUIRED_ENV_VARS.filter((v) => !process.env[v]);
+
+const missingVarsAtBoot = getMissingRequiredEnvVars();
+if (missingVarsAtBoot.length > 0) {
+  // IMPORTANT: do not crash on Vercel/serverless. Just log once.
+  console.error('Missing required environment variables:', missingVarsAtBoot);
 }
 
 const app = express();
@@ -95,13 +90,16 @@ const PORT = Number(process.env.PORT) || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Guard: if server is misconfigured, return a clean 500 for API routes instead of crashing.
 app.use((req, res, next) => {
-  const missing = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
-  if (missing.length > 0 && req.path.startsWith("/api/")) {
-    return res.status(500).json({
-      success: false,
-      message: `Server misconfigured. Missing env vars: ${missing.join(", ")}`
-    });
+  if (req.path.startsWith('/api/')) {
+    const missing = getMissingRequiredEnvVars();
+    if (missing.length > 0) {
+      return res.status(500).json({
+        success: false,
+        message: `Server misconfigured. Missing env vars: ${missing.join(', ')}`,
+      });
+    }
   }
   next();
 });
