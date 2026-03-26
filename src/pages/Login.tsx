@@ -9,13 +9,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, demoLogin } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const handleDemoLogin = () => {
-    demoLogin();
-    navigate("/dashboard");
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,13 +117,7 @@ export default function Login() {
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="w-full bg-surface-variant/50 text-on-surface py-4 rounded-2xl font-headline font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-surface-variant active:scale-[0.98] transition-all border border-outline-variant/10"
-            >
-              Try Demo Mode
-            </button>
+
           </form>
 
           <div className="mt-8 pt-8 border-t border-outline-variant/10 text-center">
