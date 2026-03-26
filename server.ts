@@ -413,6 +413,13 @@ const razorpay = new Razorpay({
 
 // Auth
 app.post("/api/auth/register", authLimiter, async (req, res) => {
+  console.log("POST /api/auth/register triggered", { email: req.body?.email });
+  console.log("Env Check:", { 
+    hasUrl: !!process.env.SUPABASE_URL, 
+    hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    nodeEnv: process.env.NODE_ENV
+  });
+
   try {
     const { name, email, password } = RegisterSchema.parse(req.body);
     const normalizedEmail = email.trim().toLowerCase();
@@ -478,6 +485,7 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
 });
 
 app.post("/api/auth/login", authLimiter, async (req, res) => {
+  console.log("POST /api/auth/login triggered", { email: req.body?.email });
   try {
     const { email, password } = LoginSchema.parse(req.body);
     const normalizedEmail = email.trim().toLowerCase();

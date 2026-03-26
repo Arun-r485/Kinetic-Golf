@@ -16,7 +16,15 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || text);
+      } catch (e: any) {
+        throw new Error(e.message || text);
+      }
+    }
     return res.json();
   },
   login: async (data: any) => {
