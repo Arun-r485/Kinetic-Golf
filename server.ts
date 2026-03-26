@@ -83,10 +83,10 @@ const REQUIRED_ENV_VARS = [
   'SUBSCRIPTION_YEARLY_PRICE'
 ]
 
-const missingVars = REQUIRED_ENV_VARS.filter(v => !process.env[v])
+const missingVars = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
 if (missingVars.length > 0) {
-  console.error('Missing required environment variables:', missingVars)
-  process.exit(1)
+  console.error("Missing required environment variables:", missingVars);
+  // Don't exit on Vercel/serverless — it breaks deployments.
 }
 
 const app = express();
@@ -94,6 +94,17 @@ const PORT = Number(process.env.PORT) || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use((req, res, next) => {
+  const missing = REQUIRED_ENV_VARS.filter(v => !process.env[v]);
+  if (missing.length > 0 && req.path.startsWith("/api/")) {
+    return res.status(500).json({
+      success: false,
+      message: `Server misconfigured. Missing env vars: ${missing.join(", ")}`
+    });
+  }
+  next();
+});
 
 // Request Body Transformer (camelCase to snake_case)
 app.use((req, res, next) => {
