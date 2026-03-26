@@ -426,8 +426,10 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
       email: normalizedEmail,
       password_hash: hashedPassword,
     }).select().single();
-
-    if (error) throw error;
+    if (error) {
+      console.error("Signup database error:", error);
+      return res.status(500).json({ success: false, message: `Database error: ${error.message}` });
+    }
     
     // Send Welcome Email
     try {
