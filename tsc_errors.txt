@@ -1,0 +1,5 @@
+server.ts(317,228): error TS2339: Property 'subscription_renewal_date' does not exist on type '{ name: any; email: any; }'.
+src/pages/CharitySelection.tsx(37,19): error TS2551: Property 'charity_id' does not exist on type 'User'. Did you mean 'charityId'?
+src/pages/CharitySelection.tsx(38,42): error TS2551: Property 'charity_id' does not exist on type 'User'. Did you mean 'charityId'?
+src/pages/CharitySelection.tsx(38,73): error TS2551: Property 'charity_id' does not exist on type 'User'. Did you mean 'charityId'?
+src/pages/CharitySelection.tsx(38,98): error TS2551: Property 'charity_id' does not exist on type 'User'. Did you mean 'charityId'?
