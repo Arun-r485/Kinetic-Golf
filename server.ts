@@ -1727,7 +1727,7 @@ app.post("/api/admin/email/test", authenticateToken, isAdmin, async (req: any, r
 // --- VITE MIDDLEWARE & SERVER START ---
 
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -1757,17 +1757,25 @@ async function startServer() {
         next(e);
       }
     });
-  } else {
+  } else if (process.env.NODE_ENV === "production") {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    // The vercel.json will handle the SPA fallback in production on Vercel,
+    // but this is kept for other production environments.
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  // Only listen if not running as a Vercel serverless function
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 startServer();
+
+export default app;
