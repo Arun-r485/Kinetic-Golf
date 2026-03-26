@@ -480,14 +480,31 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
     const { email, password } = LoginSchema.parse(req.body);
     const normalizedEmail = email.trim().toLowerCase();
 
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return res.status(500).json({ success: false, message: "Backend configuration error: Supabase credentials missing" });
+    }
+
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('email', normalizedEmail)
       .single();
 
-    if (error || !user || !(await bcrypt.compare(password, user.password_hash))) {
+    if (error) {
+      console.error("Login database error:", error);
+      if (error.code === 'PGRST116') { // item not found
+        return res.status(401).json({ success: false, message: "User not found with this email" });
+      }
+      return res.status(500).json({ success: false, message: `Database error: ${error.message}` });
+    }
+
+    if (!user) {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ success: false, message: "Incorrect password" });
     }
 
     const token = jwt.sign(

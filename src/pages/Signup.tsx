@@ -2,10 +2,11 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
-import { Zap, Mail, Lock, User, ArrowRight, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { Zap, Mail, Lock, User, ArrowRight, AlertCircle, Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function Signup() {
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,7 +15,6 @@ export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +25,9 @@ export default function Signup() {
       await signup(name, email, password);
       const from = (location.state as any)?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
-
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -108,13 +108,20 @@ export default function Signup() {
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant" />
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-surface-variant/30 border border-outline-variant/10 rounded-2xl py-4 pl-12 pr-4 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                  className="w-full bg-surface-variant/30 border border-outline-variant/10 rounded-2xl py-4 pl-12 pr-12 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </div>
 
