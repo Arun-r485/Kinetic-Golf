@@ -1806,10 +1806,8 @@ async function startServer() {
       appType: "spa",
     });
     
-    // Use vite's connect instance as middleware
     app.use(vite.middlewares);
 
-    // Fallback for SPA routing in development
     app.get("*", async (req, res, next) => {
       if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.includes('.')) {
         return next();
@@ -1817,38 +1815,30 @@ async function startServer() {
 
       try {
         const url = req.originalUrl;
-        // Read index.html
         let template = fs.readFileSync(path.resolve(process.cwd(), "index.html"), "utf-8");
-        // Apply Vite HTML transforms. This injects the Vite HMR client, and
-        // also applies HTML transforms from Vite plugins, e.g. global preambles
-        // from @vitejs/plugin-react
         template = await vite.transformIndexHtml(url, template);
-        // Send the transformed HTML back.
         res.status(200).set({ "Content-Type": "text/html" }).end(template);
       } catch (e) {
         vite.ssrFixStacktrace(e as Error);
         next(e);
       }
     });
-  } else if (process.env.NODE_ENV === "production") {
+  } else if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    // The vercel.json will handle the SPA fallback in production on Vercel,
-    // but this is kept for other production environments.
     app.get("*", (req, res, next) => {
       if (req.path.startsWith('/api')) return next();
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
+}
 
-  // Only listen if not running as a Vercel serverless function
-  if (!process.env.VERCEL) {
+if (!process.env.VERCEL) {
+  startServer().then(() => {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
-  }
+  });
 }
-
-startServer();
 
 export default app;
