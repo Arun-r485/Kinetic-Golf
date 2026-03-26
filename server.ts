@@ -12,6 +12,7 @@ import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import nodemailer from "nodemailer";
 import multer from "multer";
+import fs from "fs";
 
 /*
   ACCESS MATRIX
@@ -1731,7 +1732,31 @@ async function startServer() {
       server: { middlewareMode: true },
       appType: "spa",
     });
+    
+    // Use vite's connect instance as middleware
     app.use(vite.middlewares);
+
+    // Fallback for SPA routing in development
+    app.get("*", async (req, res, next) => {
+      if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.includes('.')) {
+        return next();
+      }
+
+      try {
+        const url = req.originalUrl;
+        // Read index.html
+        let template = fs.readFileSync(path.resolve(process.cwd(), "index.html"), "utf-8");
+        // Apply Vite HTML transforms. This injects the Vite HMR client, and
+        // also applies HTML transforms from Vite plugins, e.g. global preambles
+        // from @vitejs/plugin-react
+        template = await vite.transformIndexHtml(url, template);
+        // Send the transformed HTML back.
+        res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
+    });
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
