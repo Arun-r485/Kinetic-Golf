@@ -18,6 +18,19 @@ export default function Login() {
     navigate("/dashboard");
   };
 
+  const handleAdminLogin = async () => {
+    setError("");
+    setIsLoading(true);
+    try {
+      await signIn("admin@demo.com", "admin@123");
+      navigate("/admin");
+    } catch (err: any) {
+      setError(err.message || "Admin login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -131,13 +144,22 @@ export default function Login() {
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="w-full bg-surface-variant/50 text-on-surface py-4 rounded-2xl font-headline font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-surface-variant active:scale-[0.98] transition-all border border-outline-variant/10"
-            >
-              Try Demo Mode
-            </button>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                className="bg-surface-variant/50 text-on-surface py-4 rounded-2xl font-headline font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-surface-variant active:scale-[0.98] transition-all border border-outline-variant/10"
+              >
+                User Demo
+              </button>
+              <button
+                type="button"
+                onClick={handleAdminLogin}
+                className="bg-primary/10 text-primary py-4 rounded-2xl font-headline font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-primary/20 active:scale-[0.98] transition-all border border-primary/20"
+              >
+                Admin Demo
+              </button>
+            </div>
           </form>
 
           <div className="mt-8 pt-8 border-t border-outline-variant/10 text-center">
