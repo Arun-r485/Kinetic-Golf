@@ -14,6 +14,15 @@ import nodemailer from "nodemailer";
 import multer from "multer";
 import fs from "fs";
 
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
+
+
 /*
   ACCESS MATRIX
   ─────────────────────────────────────────────────
@@ -68,27 +77,56 @@ const toSnake = (obj: any): any => {
 }
 
 // Only variables that are truly required for the API to run.
-// Feature-specific env vars (SMTP/Razorpay/prices) should be validated inside those routes.
 const REQUIRED_ENV_VARS = [
   'SUPABASE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
   'JWT_SECRET',
+  'JWT_EXPIRES_IN',
+  'RAZORPAY_KEY_ID',
+  'RAZORPAY_KEY_SECRET',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'FROM_EMAIL',
+  'CLIENT_URL',
+  'PORT',
+  'NODE_ENV'
 ] as const;
 
 const getMissingRequiredEnvVars = () =>
   REQUIRED_ENV_VARS.filter((v) => !process.env[v]);
 
-const missingVarsAtBoot = getMissingRequiredEnvVars();
-if (missingVarsAtBoot.length > 0) {
-  // IMPORTANT: do not crash on Vercel/serverless. Just log once.
-  console.error('Missing required environment variables:', missingVarsAtBoot);
+// Validate required env vars on startup
+const missingEnv = getMissingRequiredEnvVars();
+if (missingEnv.length > 0) {
+  console.error('Missing environment variables:', missingEnv.join(', '))
 }
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-app.use(cors());
-app.use(express.json());
+// --- MIDDLEWARE ORDER MATTERS FOR RAZORPAY WEBHOOK ---
+// 1. CORS first
+app.use(cors({
+  origin: process.env.CLIENT_URL || '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
+// 2. Razorpay webhook needs raw body — MUST be before express.json()
+app.use('/api/webhook/razorpay', express.raw({ type: 'application/json' }))
+
+// 3. All other routes use JSON
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/webhook/razorpay') return next()
+  express.json()(req, res, next)
+})
+app.use(express.urlencoded({ extended: true }))
+
+// 4. Serve uploaded files
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
 // Guard: if server is misconfigured, return a clean 500 for API routes instead of crashing.
 app.use((req, res, next) => {
@@ -111,8 +149,6 @@ app.use((req, res, next) => {
   }
   next()
 })
-
-// --- SECURITY MIDDLEWARE ---
 
 // HTTPS Enforcement in production
 app.use((req, res, next) => {
@@ -197,7 +233,7 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (to: string, subject: string, text: string, html?: string) => {
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Kinetic Golf" <noreply@kineticgolf.com>',
+      from: process.env.FROM_EMAIL || '"Kinetic Golf" <noreply@kineticgolf.com>',
       to,
       subject,
       text,
@@ -268,7 +304,7 @@ function calculateStablefordPoints(holeScores: number[], holePars: number[]): nu
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key";
 
-const authenticateToken = (req: any, res: any, next: any) => {
+const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
@@ -281,7 +317,7 @@ const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
-const isAdmin = async (req: any, res: any, next: any) => {
+const isAdmin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     // First check JWT role for speed
     if (req.user?.role !== 'admin') {
@@ -314,7 +350,7 @@ const isAdmin = async (req: any, res: any, next: any) => {
   }
 };
 
-const isSubscriber = async (req: any, res: any, next: any) => {
+const isSubscriber = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     const { data: user, error } = await supabase.from("users").select("subscription_status, role").eq("id", req.user.id).single();
     if (error || !user) return res.status(404).json({ message: "User not found" });
@@ -332,7 +368,7 @@ const isSubscriber = async (req: any, res: any, next: any) => {
   }
 };
 
-const checkSubscription = async (req: any, res: any, next: any) => {
+const checkSubscription = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     const { data: user } = await supabase
       .from('users')
@@ -416,6 +452,20 @@ const razorpay = new Razorpay({
 
 // --- API ROUTES ---
 
+// Health check
+app.get('/api/health', (req: express.Request, res: express.Response) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    env: {
+      supabase: !!process.env.SUPABASE_URL,
+      jwt: !!process.env.JWT_SECRET,
+      razorpay: !!process.env.RAZORPAY_KEY_ID,
+      smtp: !!process.env.SMTP_HOST
+    }
+  })
+})
+
 // Auth
 app.post("/api/auth/register", authLimiter, async (req, res) => {
   console.log("POST /api/auth/register triggered", { email: req.body?.email });
@@ -463,7 +513,7 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: (process.env.JWT_EXPIRES_IN as any) || "7d" }
     );
 
     res.status(201).json({
@@ -513,7 +563,7 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
       const token = jwt.sign(
         { id: mockUser.id, role: mockUser.role },
         JWT_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: (process.env.JWT_EXPIRES_IN as any) || "7d" }
       );
 
       return res.status(200).json({
@@ -560,7 +610,7 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: (process.env.JWT_EXPIRES_IN as any) || "7d" }
     );
 
     res.json({
@@ -1505,11 +1555,11 @@ app.post("/api/admin/draw/publish/:id", authenticateToken, isAdmin, async (req, 
             ? `<h2>Congratulations ${entry.users.name}!</h2>
                <p>You matched <strong>${entry.match_type}</strong> in this month's draw.</p>
                <p>Log in to upload your proof and claim your prize.</p>
-               <a href="${process.env.FRONTEND_URL}/winners">View Your Winnings</a>`
+               <a href="${process.env.CLIENT_URL}/winners">View Your Winnings</a>`
             : `<h2>Hi ${entry.users.name},</h2>
                <p>This month's draw results are now published.</p>
                <p>Unfortunately you didn't match this time — but keep entering your scores for next month!</p>
-               <a href="${process.env.FRONTEND_URL}/draws">View Draw Results</a>`;
+               <a href="${process.env.CLIENT_URL}/draws">View Draw Results</a>`;
           
           sendEmail(entry.users.email, subject, html.replace(/<[^>]*>/g, ''), html);
         }
@@ -1826,6 +1876,22 @@ async function startServer() {
     });
   }
 }
+
+// Global error handler — MUST be last middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Unhandled error:', err)
+  res.status(err.status || 500).json({
+    success: false,
+    error: process.env.NODE_ENV === 'production'
+      ? 'An internal server error occurred'
+      : err.message
+  })
+})
+
+// Handle unhandled promise rejections so Vercel function doesn't crash
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+})
 
 if (!process.env.VERCEL) {
   startServer().then(() => {

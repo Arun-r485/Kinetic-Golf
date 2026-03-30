@@ -83,7 +83,7 @@ export default function App() {
           <Route
             path="/charity"
             element={
-              <ProtectedRoute requireSubscription>
+              <ProtectedRoute>
                 <Layout>
                   <CharitySelection />
                 </Layout>
